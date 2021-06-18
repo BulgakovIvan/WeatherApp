@@ -3,5 +3,12 @@
 
 <!--    Please Wait ends ...-->
     <string name="please_wait">Please Wait&#8230;</string>
+    <string name="image_contentDescription">image</string>
+    <string name="miles_per_hour">miles/hour</string>
+
+    <string name="temp">%1$s %2$s</string>
+    <string name="humidity">%1$s %2$s</string>
+    <string name="min">%1$s min</string>
+    <string name="max">%1$s max</string>
 
 </resources>
