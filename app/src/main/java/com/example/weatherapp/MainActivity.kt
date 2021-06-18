@@ -15,15 +15,22 @@ import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import com.example.weatherapp.models.WeatherResponse
+import com.example.weatherapp.network.WeatherService
 import com.google.android.gms.location.*
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class MainActivity : AppCompatActivity() {
-    val tag = "ups"
+    val TAG = "ups"
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -109,18 +116,52 @@ class MainActivity : AppCompatActivity() {
         override fun onLocationResult(locationResult: LocationResult) {
             val mLastLocation: Location = locationResult.lastLocation
             val latitude = mLastLocation.latitude
-            Log.e(tag, "Current Latitude: $latitude")
+            Log.e(TAG, "Current Latitude: $latitude")
 
             val longitude = mLastLocation.longitude
-            Log.e(tag, "Current Longitude: $longitude")
+            Log.e(TAG, "Current Longitude: $longitude")
 
-            getLocationWeatherDetails()
+            getLocationWeatherDetails(latitude, longitude)
         }
     }
 
-    private fun getLocationWeatherDetails() {
+    private fun getLocationWeatherDetails(latitude: Double, longitude: Double) {
         if (Constants.isNetworkAvailable(this)) {
-            Toast.makeText(this, "You have connected to the internet.", Toast.LENGTH_SHORT).show()
+
+            val retrofit: Retrofit = Retrofit
+                .Builder()
+                .baseUrl(Constants.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create()).build()
+
+            val services: WeatherService = retrofit
+                .create(WeatherService::class.java)
+
+            val listCall: Call<WeatherResponse> = services.getWeather(
+                latitude, longitude, Constants.METRIC_UNIT, getString(R.string.APP_ID)
+            )
+
+            listCall.enqueue(object : Callback<WeatherResponse> {
+                override fun onResponse(call: Call<WeatherResponse>,
+                                        response: Response<WeatherResponse>) {
+
+                    if (response.isSuccessful) {
+                        val weatherList: WeatherResponse? = response.body()
+
+                        Log.e(TAG, weatherList.toString())
+
+                    } else {
+                        when (response.code()) {
+                            400 -> Log.e(TAG, "Bad connection")
+                            404 -> Log.e(TAG, "Not found")
+                            else -> Log.e(TAG, "Generic Error")
+                        }
+                    }
+                }
+
+                override fun onFailure(call: Call<WeatherResponse>, t: Throwable) {
+                    Log.e(TAG, "Err: ${t.message}")
+                }
+            })
         } else {
             Toast.makeText(this, "No internet connection available.", Toast.LENGTH_SHORT).show()
         }
