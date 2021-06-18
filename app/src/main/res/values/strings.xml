@@ -1,3 +1,7 @@
 <resources>
-    <string name="app_name">WeatherApp</string>
+    <string name="app_name">Weather App</string>
+
+<!--    Please Wait ends ...-->
+    <string name="please_wait">Please Wait&#8230;</string>
+
 </resources>

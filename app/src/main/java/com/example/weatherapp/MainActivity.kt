@@ -2,6 +2,7 @@ package com.example.weatherapp
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Dialog
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -32,6 +33,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 class MainActivity : AppCompatActivity() {
     val TAG = "ups"
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
+
+    private var mProgressDialog: Dialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -140,6 +143,8 @@ class MainActivity : AppCompatActivity() {
                 latitude, longitude, Constants.METRIC_UNIT, getString(R.string.APP_ID)
             )
 
+            showCustomProgressDialog()
+
             listCall.enqueue(object : Callback<WeatherResponse> {
                 override fun onResponse(call: Call<WeatherResponse>,
                                         response: Response<WeatherResponse>) {
@@ -156,14 +161,28 @@ class MainActivity : AppCompatActivity() {
                             else -> Log.e(TAG, "Generic Error")
                         }
                     }
+                    hideProgressDialog()
                 }
 
                 override fun onFailure(call: Call<WeatherResponse>, t: Throwable) {
+                    hideProgressDialog()
                     Log.e(TAG, "Err: ${t.message}")
                 }
             })
         } else {
             Toast.makeText(this, "No internet connection available.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun showCustomProgressDialog() {
+        mProgressDialog = Dialog(this)
+        mProgressDialog!!.setContentView(R.layout.dialog_custom_progress)
+        mProgressDialog!!.show()
+    }
+
+    private fun hideProgressDialog() {
+        if (mProgressDialog != null) {
+            mProgressDialog!!.dismiss()
         }
     }
 }
